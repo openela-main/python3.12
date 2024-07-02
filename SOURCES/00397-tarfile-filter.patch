@@ -235,9 +235,9 @@ index c5fc76d..397e334 100644
 +                self.check_trusted_default(tar, tempdir)
 +
 +
- def setUpModule():
-     os_helper.unlink(TEMPDIR)
-     os.makedirs(TEMPDIR)
+ class OverwriteTests(archiver_tests.OverwriteTests, unittest.TestCase):
+     testdir = os.path.join(TEMPDIR, "testoverwrite")
+ 
 -- 
 2.43.0
 

@@ -16,12 +16,12 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.1
+%global general_version %{pybasever}.3
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}
-License: Python
+Release: 2%{?dist}
+License: Python-2.0.1
 
 
 # ==================================
@@ -65,18 +65,18 @@ License: Python
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
-%global pip_version 23.2.1
+%global pip_version 24.0
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
 # pip
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
 %global pip_bundled_provides %{expand:
-Provides: bundled(python3dist(cachecontrol)) = 0.12.11
-Provides: bundled(python3dist(certifi)) = 2023.5.7
+Provides: bundled(python3dist(cachecontrol)) = 0.13.1
+Provides: bundled(python3dist(certifi)) = 2023.7.22
 Provides: bundled(python3dist(chardet)) = 5.1
 Provides: bundled(python3dist(colorama)) = 0.4.6
-Provides: bundled(python3dist(distlib)) = 0.3.6
+Provides: bundled(python3dist(distlib)) = 0.3.8
 Provides: bundled(python3dist(distro)) = 1.8
 Provides: bundled(python3dist(idna)) = 3.4
 Provides: bundled(python3dist(msgpack)) = 1.0.5
@@ -92,8 +92,9 @@ Provides: bundled(python3dist(setuptools)) = 68
 Provides: bundled(python3dist(six)) = 1.16
 Provides: bundled(python3dist(tenacity)) = 8.2.2
 Provides: bundled(python3dist(tomli)) = 2.0.1
+Provides: bundled(python3dist(truststore)) = 0.8
 Provides: bundled(python3dist(typing-extensions)) = 4.7.1
-Provides: bundled(python3dist(urllib3)) = 1.26.16
+Provides: bundled(python3dist(urllib3)) = 1.26.17
 Provides: bundled(python3dist(webencodings)) = 0.5.1
 }
 # setuptools
@@ -115,7 +116,7 @@ Provides: bundled(python3dist(typing-extensions)) = 4.4
 Provides: bundled(python3dist(zipp)) = 3.7
 }
 # wheel
-#  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheel-*.whl wheel/vendored/vendor.txt)
+#  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt)
 %global wheel_bundled_provides %{expand:
 Provides: bundled(python3dist(packaging)) = 23
 }
@@ -388,6 +389,22 @@ Patch397: 00397-tarfile-filter.patch
 # parameter to getaddresses() and parseaddr() functions. Patch by
 # Thomas Dwyer.
 Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-parseaddr-111116.patch
+
+# 00422 # a353cebef737c41420dc7ae2469dd657371b8881
+# Fix tests for XMLPullParser with Expat 2.6.0
+#
+# Feeding the parser by too small chunks defers parsing to prevent
+# CVE-2023-52425. Future versions of Expat may be more reactive.
+Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
+
+# 00425 # a563ac3076a00f0f48b3f94ff63d91d37cb4f1e9
+# Only check for 'test/wheeldata' when it's actually used
+#
+# We build Python in Fedora 39+ with option `--with-wheel-pkg-dir`
+# pointing to a custom wheel directory and delete the contents of
+# upstream's `test/wheeldata`. Don't include the directory in the test set
+# if the wheels are used from a different location.
+Patch425: 00425-only-check-for-test-wheeldata-when-it-s-actually-used.patch
 
 # (New patches go here ^^^)
 #
@@ -755,8 +772,8 @@ If you want to build an RPM against the python%{pyshortver} module, you need to 
 
 %if %{with rpmwheels}
 rm Lib/ensurepip/_bundled/pip-%{pip_version}-py3-none-any.whl
-rm Lib/test/setuptools-%{setuptools_version}-py3-none-any.whl
-rm Lib/test/wheel-%{wheel_version}-py3-none-any.whl
+rm Lib/test/wheeldata/setuptools-%{setuptools_version}-py3-none-any.whl
+rm Lib/test/wheeldata/wheel-%{wheel_version}-py3-none-any.whl
 %endif
 
 # Remove all exe files to ensure we are not shipping prebuilt binaries
@@ -1517,10 +1534,6 @@ fi
 %{dynload_dir}/termios.%{SOABI_optimized}.so
 %{dynload_dir}/unicodedata.%{SOABI_optimized}.so
 %{dynload_dir}/_uuid.%{SOABI_optimized}.so
-%{dynload_dir}/xxlimited.%{SOABI_optimized}.so
-%{dynload_dir}/xxlimited_35.%{SOABI_optimized}.so
-%{dynload_dir}/_xxsubinterpreters.%{SOABI_optimized}.so
-%{dynload_dir}/xxsubtype.%{SOABI_optimized}.so
 %{dynload_dir}/zlib.%{SOABI_optimized}.so
 %{dynload_dir}/_zoneinfo.%{SOABI_optimized}.so
 
@@ -1621,12 +1634,6 @@ fi
 
 %{pylibdir}/zoneinfo
 
-%dir %{pylibdir}/__phello__/
-%dir %{pylibdir}/__phello__/__pycache__/
-%{pylibdir}/__phello__/__init__.py
-%{pylibdir}/__phello__/spam.py
-%{pylibdir}/__phello__/__pycache__/*%{bytecode_suffixes}
-
 %if "%{_lib}" == "lib64"
 %attr(0755,root,root) %dir %{_prefix}/lib/python%{pybasever}
 %attr(0755,root,root) %dir %{_prefix}/lib/python%{pybasever}/site-packages
@@ -1726,7 +1733,17 @@ fi
 %{dynload_dir}/_testmultiphase.%{SOABI_optimized}.so
 %{dynload_dir}/_testsinglephase.%{SOABI_optimized}.so
 %{dynload_dir}/_xxinterpchannels.%{SOABI_optimized}.so
+%{dynload_dir}/_xxsubinterpreters.%{SOABI_optimized}.so
 %{dynload_dir}/_xxtestfuzz.%{SOABI_optimized}.so
+%{dynload_dir}/xxlimited.%{SOABI_optimized}.so
+%{dynload_dir}/xxlimited_35.%{SOABI_optimized}.so
+%{dynload_dir}/xxsubtype.%{SOABI_optimized}.so
+
+%dir %{pylibdir}/__phello__/
+%dir %{pylibdir}/__phello__/__pycache__/
+%{pylibdir}/__phello__/__init__.py
+%{pylibdir}/__phello__/spam.py
+%{pylibdir}/__phello__/__pycache__/*%{bytecode_suffixes}
 
 # We don't bother splitting the debug build out into further subpackages:
 # if you need it, you're probably a developer.
@@ -1808,10 +1825,6 @@ fi
 %{dynload_dir}/termios.%{SOABI_debug}.so
 %{dynload_dir}/unicodedata.%{SOABI_debug}.so
 %{dynload_dir}/_uuid.%{SOABI_debug}.so
-%{dynload_dir}/xxlimited.%{SOABI_debug}.so
-%{dynload_dir}/xxlimited_35.%{SOABI_debug}.so
-%{dynload_dir}/_xxsubinterpreters.%{SOABI_debug}.so
-%{dynload_dir}/xxsubtype.%{SOABI_debug}.so
 %{dynload_dir}/zlib.%{SOABI_debug}.so
 %{dynload_dir}/_zoneinfo.%{SOABI_debug}.so
 
@@ -1848,7 +1861,11 @@ fi
 %{dynload_dir}/_testmultiphase.%{SOABI_debug}.so
 %{dynload_dir}/_testsinglephase.%{SOABI_debug}.so
 %{dynload_dir}/_xxinterpchannels.%{SOABI_debug}.so
+%{dynload_dir}/_xxsubinterpreters.%{SOABI_debug}.so
 %{dynload_dir}/_xxtestfuzz.%{SOABI_debug}.so
+%{dynload_dir}/xxlimited.%{SOABI_debug}.so
+%{dynload_dir}/xxlimited_35.%{SOABI_debug}.so
+%{dynload_dir}/xxsubtype.%{SOABI_debug}.so
 
 %{pylibdir}/_sysconfigdata_%{ABIFLAGS_debug}_linux_%{platform_triplet}.py
 %{pylibdir}/__pycache__/_sysconfigdata_%{ABIFLAGS_debug}_linux_%{platform_triplet}%{bytecode_suffixes}
@@ -1876,6 +1893,29 @@ fi
 # ======================================================
 
 %changelog
+* Tue Jun 11 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.3-2
+- Enable importing of hash-based .pyc files under FIPS mode
+Resolves: RHEL-40776
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.3-1
+- Update to 3.12.3
+Related: RHEL-33685
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-3
+- Move all test modules to the python3-test package, namely:
+   - __phello__
+   - _xxsubinterpreters
+   - xxlimited
+   - xxlimited_35
+   - xxsubtype
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-2
+- Fix tests for XMLPullParser with Expat with fixed CVE
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-1
+- Update to 3.12.2
+Resolves: RHEL-33685
+
 * Mon Feb 19 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4
 - Add Red Hat configuration for CVE-2007-4559
 
