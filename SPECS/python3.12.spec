@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}
+Release: 4%{?dist}.1
 License: Python
 
 
@@ -384,6 +384,13 @@ Patch397: 00397-tarfile-filter.patch
 # parameter to getaddresses() and parseaddr() functions. Patch by
 # Thomas Dwyer.
 Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-parseaddr-111116.patch
+
+# 00422 # a353cebef737c41420dc7ae2469dd657371b8881
+# gh-115133: Fix tests for XMLPullParser with Expat 2.6.0
+#
+# Feeding the parser by too small chunks defers parsing to prevent
+# CVE-2023-52425. Future versions of Expat may be more reactive.
+Patch422: 00422-gh-115133-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 
 # (New patches go here ^^^)
 #
@@ -1696,6 +1703,11 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.1-4.1
+- Fix tests for XMLPullParser with Expat with fixed CVE
+- Enable importing of hash-based .pyc files under FIPS mode
+Resolves: RHEL-40773
+
 * Mon Feb 19 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4
 - Add Red Hat configuration for CVE-2007-4559
 
