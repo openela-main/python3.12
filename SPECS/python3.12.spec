@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}.1
+Release: 4%{?dist}.3
 License: Python
 
 
@@ -391,6 +391,35 @@ Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-par
 # Feeding the parser by too small chunks defers parsing to prevent
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-gh-115133-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
+
+# 00435 #
+# Security fix for CVE-2024-6923
+# gh-121650: Encode newlines in headers, and verify headers are sound
+#
+# Encode header parts that contain newlines
+#
+# Per RFC 2047:
+#
+# > [...] these encoding schemes allow the
+# > encoding of arbitrary octet values, mail readers that implement this
+# > decoding should also ensure that display of the decoded data on the
+# > recipient's terminal will not cause unwanted side-effects
+#
+# It seems that the "quoted-word" scheme is a valid way to include
+# a newline character in a header value, just like we already allow
+# undecodable bytes or control characters.
+# They do need to be properly quoted when serialized to text, though.
+#
+# Verify that email headers are well-formed
+#
+# This should fail for custom fold() implementations that aren't careful about newlines.
+# Tracking bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=2302255
+# Resolved upstream: https://github.com/python/cpython/issues/121650
+Patch435: 00435-CVE-2024-6923.patch
+
+# 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
+# [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
+Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
 
 # (New patches go here ^^^)
 #
@@ -1703,6 +1732,14 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4.3
+- Security fix for CVE-2024-8088
+Resolves: RHEL-55964
+
+* Mon Aug 12 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4.2
+- Security fix for CVE-2024-6923
+Resolves: RHEL-53087
+
 * Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.1-4.1
 - Fix tests for XMLPullParser with Expat with fixed CVE
 - Enable importing of hash-based .pyc files under FIPS mode
