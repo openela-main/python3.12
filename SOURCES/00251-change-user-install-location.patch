@@ -30,10 +30,10 @@ Co-authored-by: Lumír Balhar <frenzy.madness@gmail.com>
  3 files changed, 71 insertions(+), 4 deletions(-)
 
 diff --git a/Lib/site.py b/Lib/site.py
-index 924b2460d9..51b5baca93 100644
+index 924cfbecec..e2871ecc89 100644
 --- a/Lib/site.py
 +++ b/Lib/site.py
-@@ -387,8 +387,15 @@ def getsitepackages(prefixes=None):
+@@ -398,8 +398,15 @@ def getsitepackages(prefixes=None):
      return sitepackages
  
  def addsitepackages(known_paths, prefixes=None):

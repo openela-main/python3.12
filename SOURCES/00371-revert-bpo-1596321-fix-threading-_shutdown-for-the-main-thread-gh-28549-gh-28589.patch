@@ -60,10 +60,10 @@ index 2e4b860b97..3066b23ee1 100644
          code = """if 1:
              import _thread
 diff --git a/Lib/threading.py b/Lib/threading.py
-index 98cb43c697..ee647f8549 100644
+index 0bba85d08a..b256e3273f 100644
 --- a/Lib/threading.py
 +++ b/Lib/threading.py
-@@ -1585,29 +1585,20 @@ def _shutdown():
+@@ -1587,29 +1587,20 @@ def _shutdown():
  
      global _SHUTTING_DOWN
      _SHUTTING_DOWN = True
