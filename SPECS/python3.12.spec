@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}.3
+Release: 4%{?dist}.4
 License: Python
 
 
@@ -420,6 +420,10 @@ Patch435: 00435-CVE-2024-6923.patch
 # 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
 # [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
 Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
+
+# CVE-2024-6232: Remove backtracking when parsing tarfile headers
+# Resolved upstream: https://github.com/python/cpython/issues/121285
+Patch437: 00437-CVE-2024-6232.patch
 
 # (New patches go here ^^^)
 #
@@ -1732,6 +1736,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Mon Oct 07 2024 Arti Agrawal <artagraw@redhat.com> - 3.12.1-4.4
+- Security fix for CVE-2024-6232
+Resolves: RHEL-57416
+
 * Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4.3
 - Security fix for CVE-2024-8088
 Resolves: RHEL-55964
