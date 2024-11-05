@@ -16,11 +16,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.5
+%global general_version %{pybasever}.6
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -382,25 +382,12 @@ Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-g
 # - https://access.redhat.com/articles/7004769
 Patch397: 00397-tarfile-filter.patch
 
-# 00415 # 83e0fc3ec7bc38055c536f482578a10f6efcc08c
-# [CVE-2023-27043] gh-102988: Reject malformed addresses in email.parseaddr() (#111116)
-#
-# Detect email address parsing errors and return empty tuple to
-# indicate the parsing error (old API). Add an optional 'strict'
-# parameter to getaddresses() and parseaddr() functions. Patch by
-# Thomas Dwyer.
-Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-parseaddr-111116.patch
-
 # 00422 # a353cebef737c41420dc7ae2469dd657371b8881
 # Fix tests for XMLPullParser with Expat 2.6.0
 #
 # Feeding the parser by too small chunks defers parsing to prevent
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
-
-# 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
-# [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
-Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
 
 # (New patches go here ^^^)
 #
@@ -1892,6 +1879,10 @@ fi
 # ======================================================
 
 %changelog
+* Mon Sep 09 2024 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.6-1
+- Update to 3.12.6
+Resolves: RHEL-57405
+
 * Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2
 - Security fix for CVE-2024-8088
 Resolves: RHEL-55939
