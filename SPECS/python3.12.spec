@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 2%{?dist}.1
 License: Python-2.0.1
 
 
@@ -397,6 +397,11 @@ Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 # 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
 # [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
 Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
+
+# 00437 #
+# CVE-2024-6232: gh-121285: Remove backtracking when parsing tarfile headers
+# Resolved upstream: https://github.com/python/cpython/issues/121285
+Patch437: 00437-CVE-2024-6232.patch
 
 # (New patches go here ^^^)
 #
@@ -1712,6 +1717,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Wed Sep 11 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.5-2.1
+- Security fix for CVE-2024-6232
+Resolves: RHEL-57415
+
 * Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2
 - Security fix for CVE-2024-8088
 Resolves: RHEL-55963
