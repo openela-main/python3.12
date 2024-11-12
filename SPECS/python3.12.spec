@@ -16,12 +16,12 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.1
+%global general_version %{pybasever}.5
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}.4
-License: Python
+Release: 2%{?dist}
+License: Python-2.0.1
 
 
 # ==================================
@@ -66,36 +66,31 @@ License: Python
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
-%global pip_version 23.2.1
+%global pip_version 24.2
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
 # pip
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
 %global pip_bundled_provides %{expand:
-Provides: bundled(python3dist(cachecontrol)) = 0.12.11
-Provides: bundled(python3dist(certifi)) = 2023.5.7
-Provides: bundled(python3dist(chardet)) = 5.1
-Provides: bundled(python3dist(colorama)) = 0.4.6
-Provides: bundled(python3dist(distlib)) = 0.3.6
-Provides: bundled(python3dist(distro)) = 1.8
-Provides: bundled(python3dist(idna)) = 3.4
-Provides: bundled(python3dist(msgpack)) = 1.0.5
-Provides: bundled(python3dist(packaging)) = 21.3
-Provides: bundled(python3dist(platformdirs)) = 3.8.1
-Provides: bundled(python3dist(pygments)) = 2.15.1
-Provides: bundled(python3dist(pyparsing)) = 3.1
+Provides: bundled(python3dist(cachecontrol)) = 0.14
+Provides: bundled(python3dist(certifi)) = 2024.7.4
+Provides: bundled(python3dist(distlib)) = 0.3.8
+Provides: bundled(python3dist(distro)) = 1.9
+Provides: bundled(python3dist(idna)) = 3.7
+Provides: bundled(python3dist(msgpack)) = 1.0.8
+Provides: bundled(python3dist(packaging)) = 24.1
+Provides: bundled(python3dist(platformdirs)) = 4.2.2
+Provides: bundled(python3dist(pygments)) = 2.18
 Provides: bundled(python3dist(pyproject-hooks)) = 1
-Provides: bundled(python3dist(requests)) = 2.31
+Provides: bundled(python3dist(requests)) = 2.32.3
 Provides: bundled(python3dist(resolvelib)) = 1.0.1
-Provides: bundled(python3dist(rich)) = 13.4.2
-Provides: bundled(python3dist(setuptools)) = 68
-Provides: bundled(python3dist(six)) = 1.16
-Provides: bundled(python3dist(tenacity)) = 8.2.2
+Provides: bundled(python3dist(rich)) = 13.7.1
+Provides: bundled(python3dist(setuptools)) = 70.3
 Provides: bundled(python3dist(tomli)) = 2.0.1
-Provides: bundled(python3dist(typing-extensions)) = 4.7.1
-Provides: bundled(python3dist(urllib3)) = 1.26.16
-Provides: bundled(python3dist(webencodings)) = 0.5.1
+Provides: bundled(python3dist(truststore)) = 0.9.1
+Provides: bundled(python3dist(typing-extensions)) = 4.12.2
+Provides: bundled(python3dist(urllib3)) = 1.26.18
 }
 # setuptools
 # vendor.txt files not in .whl
@@ -116,7 +111,7 @@ Provides: bundled(python3dist(typing-extensions)) = 4.4
 Provides: bundled(python3dist(zipp)) = 3.7
 }
 # wheel
-#  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheel-*.whl wheel/vendored/vendor.txt)
+#  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt)
 %global wheel_bundled_provides %{expand:
 Provides: bundled(python3dist(packaging)) = 23
 }
@@ -199,6 +194,13 @@ Provides: bundled(python3dist(packaging)) = 23
 %global py_SOVERSION 1.0
 %global py_INSTSONAME_optimized libpython%{LDVERSION_optimized}.so.%{py_SOVERSION}
 %global py_INSTSONAME_debug     libpython%{LDVERSION_debug}.so.%{py_SOVERSION}
+
+# The -O flag for the compiler, optimized builds
+# https://fedoraproject.org/wiki/Changes/Python_built_with_gcc_O3
+%global optflags_optimized -O3
+# The -O flag for the compiler, debug builds
+# -Wno-cpp avoids some warnings with -O0
+%global optflags_debug -O0 -Wno-cpp
 
 # Disable automatic bytecompilation. The python3 binary is not yet be
 # available in /usr/bin when Python is built. Also, the bytecompilation fails
@@ -386,44 +388,15 @@ Patch397: 00397-tarfile-filter.patch
 Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-parseaddr-111116.patch
 
 # 00422 # a353cebef737c41420dc7ae2469dd657371b8881
-# gh-115133: Fix tests for XMLPullParser with Expat 2.6.0
+# Fix tests for XMLPullParser with Expat 2.6.0
 #
 # Feeding the parser by too small chunks defers parsing to prevent
 # CVE-2023-52425. Future versions of Expat may be more reactive.
-Patch422: 00422-gh-115133-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
-
-# 00435 #
-# Security fix for CVE-2024-6923
-# gh-121650: Encode newlines in headers, and verify headers are sound
-#
-# Encode header parts that contain newlines
-#
-# Per RFC 2047:
-#
-# > [...] these encoding schemes allow the
-# > encoding of arbitrary octet values, mail readers that implement this
-# > decoding should also ensure that display of the decoded data on the
-# > recipient's terminal will not cause unwanted side-effects
-#
-# It seems that the "quoted-word" scheme is a valid way to include
-# a newline character in a header value, just like we already allow
-# undecodable bytes or control characters.
-# They do need to be properly quoted when serialized to text, though.
-#
-# Verify that email headers are well-formed
-#
-# This should fail for custom fold() implementations that aren't careful about newlines.
-# Tracking bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=2302255
-# Resolved upstream: https://github.com/python/cpython/issues/121650
-Patch435: 00435-CVE-2024-6923.patch
+Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 
 # 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
 # [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
 Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
-
-# CVE-2024-6232: Remove backtracking when parsing tarfile headers
-# Resolved upstream: https://github.com/python/cpython/issues/121285
-Patch437: 00437-CVE-2024-6232.patch
 
 # (New patches go here ^^^)
 #
@@ -750,13 +723,13 @@ The debug runtime additionally supports debug builds of C-API extensions
 # setuptools.whl does not contain the vendored.txt files
 if [ -f %{_rpmconfigdir}/pythonbundles.py ]; then
   %{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt) --compare-with '%pip_bundled_provides'
-  %{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheel-*.whl wheel/vendored/vendor.txt) --compare-with '%wheel_bundled_provides'
+  %{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt) --compare-with '%wheel_bundled_provides'
 fi
 
 %if %{with rpmwheels}
 rm Lib/ensurepip/_bundled/pip-%{pip_version}-py3-none-any.whl
-rm Lib/test/setuptools-%{setuptools_version}-py3-none-any.whl
-rm Lib/test/wheel-%{wheel_version}-py3-none-any.whl
+rm Lib/test/wheeldata/setuptools-%{setuptools_version}-py3-none-any.whl
+rm Lib/test/wheeldata/wheel-%{wheel_version}-py3-none-any.whl
 %endif
 
 # Remove all exe files to ensure we are not shipping prebuilt binaries
@@ -835,6 +808,7 @@ BuildPython() {
   ConfName=$1
   ExtraConfigArgs=$2
   MoreCFlags=$3
+  MoreCFlagsNodist=$4
 
   # Each build is done in its own directory
   ConfDir=build/$ConfName
@@ -874,7 +848,7 @@ BuildPython() {
   $ExtraConfigArgs \
   %{nil}
 
-%global flags_override EXTRA_CFLAGS="$MoreCFlags" CFLAGS_NODIST="$CFLAGS_NODIST $MoreCFlags"
+%global flags_override EXTRA_CFLAGS="$MoreCFlags" CFLAGS_NODIST="$CFLAGS_NODIST $MoreCFlags $MoreCFlagsNodist"
 
 %if %{without bootstrap}
   # Regenerate generated files (needs python3)
@@ -897,12 +871,14 @@ BuildPython() {
 # See also: https://bugzilla.redhat.com/show_bug.cgi?id=1818857
 BuildPython debug \
   "--without-ensurepip --with-pydebug" \
-  "-O0 -Wno-cpp"
+  "%{optflags_debug}" \
+  ""
 %endif # with debug_build
 
 BuildPython optimized \
   "--without-ensurepip %{optimizations_flag}" \
-  ""
+  "" \
+  "%{optflags_optimized}"
 
 # ======================================================
 # Installing the built code:
@@ -1007,7 +983,7 @@ EOF
 %if %{with debug_build}
 InstallPython debug \
   %{py_INSTSONAME_debug} \
-  -O0 \
+  "%{optflags_debug}" \
   %{LDVERSION_debug}
 %endif # with debug_build
 
@@ -1382,10 +1358,6 @@ CheckPython optimized
 %{dynload_dir}/termios.%{SOABI_optimized}.so
 %{dynload_dir}/unicodedata.%{SOABI_optimized}.so
 %{dynload_dir}/_uuid.%{SOABI_optimized}.so
-%{dynload_dir}/xxlimited.%{SOABI_optimized}.so
-%{dynload_dir}/xxlimited_35.%{SOABI_optimized}.so
-%{dynload_dir}/_xxsubinterpreters.%{SOABI_optimized}.so
-%{dynload_dir}/xxsubtype.%{SOABI_optimized}.so
 %{dynload_dir}/zlib.%{SOABI_optimized}.so
 %{dynload_dir}/_zoneinfo.%{SOABI_optimized}.so
 
@@ -1486,12 +1458,6 @@ CheckPython optimized
 
 %{pylibdir}/zoneinfo
 
-%dir %{pylibdir}/__phello__/
-%dir %{pylibdir}/__phello__/__pycache__/
-%{pylibdir}/__phello__/__init__.py
-%{pylibdir}/__phello__/spam.py
-%{pylibdir}/__phello__/__pycache__/*%{bytecode_suffixes}
-
 %if "%{_lib}" == "lib64"
 %attr(0755,root,root) %dir %{_prefix}/lib/python%{pybasever}
 %attr(0755,root,root) %dir %{_prefix}/lib/python%{pybasever}/site-packages
@@ -1586,7 +1552,17 @@ CheckPython optimized
 %{dynload_dir}/_testmultiphase.%{SOABI_optimized}.so
 %{dynload_dir}/_testsinglephase.%{SOABI_optimized}.so
 %{dynload_dir}/_xxinterpchannels.%{SOABI_optimized}.so
+%{dynload_dir}/_xxsubinterpreters.%{SOABI_optimized}.so
 %{dynload_dir}/_xxtestfuzz.%{SOABI_optimized}.so
+%{dynload_dir}/xxlimited.%{SOABI_optimized}.so
+%{dynload_dir}/xxlimited_35.%{SOABI_optimized}.so
+%{dynload_dir}/xxsubtype.%{SOABI_optimized}.so
+
+%dir %{pylibdir}/__phello__/
+%dir %{pylibdir}/__phello__/__pycache__/
+%{pylibdir}/__phello__/__init__.py
+%{pylibdir}/__phello__/spam.py
+%{pylibdir}/__phello__/__pycache__/*%{bytecode_suffixes}
 
 # We don't bother splitting the debug build out into further subpackages:
 # if you need it, you're probably a developer.
@@ -1668,10 +1644,6 @@ CheckPython optimized
 %{dynload_dir}/termios.%{SOABI_debug}.so
 %{dynload_dir}/unicodedata.%{SOABI_debug}.so
 %{dynload_dir}/_uuid.%{SOABI_debug}.so
-%{dynload_dir}/xxlimited.%{SOABI_debug}.so
-%{dynload_dir}/xxlimited_35.%{SOABI_debug}.so
-%{dynload_dir}/_xxsubinterpreters.%{SOABI_debug}.so
-%{dynload_dir}/xxsubtype.%{SOABI_debug}.so
 %{dynload_dir}/zlib.%{SOABI_debug}.so
 %{dynload_dir}/_zoneinfo.%{SOABI_debug}.so
 
@@ -1708,7 +1680,11 @@ CheckPython optimized
 %{dynload_dir}/_testmultiphase.%{SOABI_debug}.so
 %{dynload_dir}/_testsinglephase.%{SOABI_debug}.so
 %{dynload_dir}/_xxinterpchannels.%{SOABI_debug}.so
+%{dynload_dir}/_xxsubinterpreters.%{SOABI_debug}.so
 %{dynload_dir}/_xxtestfuzz.%{SOABI_debug}.so
+%{dynload_dir}/xxlimited.%{SOABI_debug}.so
+%{dynload_dir}/xxlimited_35.%{SOABI_debug}.so
+%{dynload_dir}/xxsubtype.%{SOABI_debug}.so
 
 %{pylibdir}/_sysconfigdata_%{ABIFLAGS_debug}_linux_%{platform_triplet}.py
 %{pylibdir}/__pycache__/_sysconfigdata_%{ABIFLAGS_debug}_linux_%{platform_triplet}%{bytecode_suffixes}
@@ -1736,22 +1712,48 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Mon Oct 07 2024 Arti Agrawal <artagraw@redhat.com> - 3.12.1-4.4
-- Security fix for CVE-2024-6232
-Resolves: RHEL-57416
-
-* Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4.3
+* Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2
 - Security fix for CVE-2024-8088
-Resolves: RHEL-55964
+Resolves: RHEL-55963
 
-* Mon Aug 12 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4.2
+* Wed Aug 07 2024 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.5-1
+- Update to 3.12.5
 - Security fix for CVE-2024-6923
-Resolves: RHEL-53087
+Resolves: RHEL-53041
 
-* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.1-4.1
-- Fix tests for XMLPullParser with Expat with fixed CVE
+* Thu Jul 25 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.4-3
+- Properly propagate the optimization flags to C extensions
+
+* Wed Jul 17 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.4-2
+- Build Python with -O3
+- https://fedoraproject.org/wiki/Changes/Python_built_with_gcc_O3
+
+* Fri Jun 28 2024 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.4-1
+- Update to 3.12.4
+Resolves: RHEL-44103
+
+* Tue Jun 11 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.3-2
 - Enable importing of hash-based .pyc files under FIPS mode
-Resolves: RHEL-40773
+Resolves: RHEL-40772
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.3-1
+- Update to 3.12.3
+Related: RHEL-33690
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-3
+- Move all test modules to the python3-test package, namely:
+   - __phello__
+   - _xxsubinterpreters
+   - xxlimited
+   - xxlimited_35
+   - xxsubtype
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-2
+- Fix tests for XMLPullParser with Expat with fixed CVE
+
+* Fri May 03 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.2-1
+- Update to 3.12.2
+Resolves: RHEL-33690
 
 * Mon Feb 19 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.1-4
 - Add Red Hat configuration for CVE-2007-4559

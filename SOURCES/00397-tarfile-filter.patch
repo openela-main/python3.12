@@ -1,19 +1,24 @@
-From 73d2995223c725638d53b9cb8e1d26b82daf0874 Mon Sep 17 00:00:00 2001
+From ddd8064257a1916726b784d43f18e889ea1634f7 Mon Sep 17 00:00:00 2001
 From: Petr Viktorin <encukou@gmail.com>
-Date: Mon, 6 Mar 2023 17:24:24 +0100
+Date: Tue, 2 Jul 2024 11:40:37 +0200
 Subject: [PATCH] CVE-2007-4559, PEP-706: Add filters for tarfile extraction
  (downstream)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Add and test RHEL-specific ways of configuring the default behavior: environment
 variable and config file.
+
+Co-Authored-By: Tomáš Hrnčiar <thrnciar@redhat.com>
 ---
- Lib/tarfile.py           |  47 +++++++++++++--
+ Lib/tarfile.py           |  47 +++++++++++--
  Lib/test/test_shutil.py  |   2 +-
- Lib/test/test_tarfile.py | 123 ++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 163 insertions(+), 9 deletions(-)
+ Lib/test/test_tarfile.py | 147 +++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 185 insertions(+), 11 deletions(-)
 
 diff --git a/Lib/tarfile.py b/Lib/tarfile.py
-index 02f5e3b..f7109f3 100755
+index e1487e3..89b6843 100755
 --- a/Lib/tarfile.py
 +++ b/Lib/tarfile.py
 @@ -71,6 +71,13 @@ __all__ = ["TarFile", "TarInfo", "is_tarfile", "TarError", "ReadError",
@@ -30,7 +35,7 @@ index 02f5e3b..f7109f3 100755
  
  #---------------------------------------------------------
  # tar constants
-@@ -2217,11 +2224,41 @@ class TarFile(object):
+@@ -2218,11 +2225,41 @@ class TarFile(object):
          if filter is None:
              filter = self.extraction_filter
              if filter is None:
@@ -38,7 +43,7 @@ index 02f5e3b..f7109f3 100755
 -                    'Python 3.14 will, by default, filter extracted tar '
 -                    + 'archives and reject files or modify their metadata. '
 -                    + 'Use the filter argument to control this behavior.',
--                    DeprecationWarning)
+-                    DeprecationWarning, stacklevel=3)
 +                name = os.environ.get('PYTHON_TARFILE_EXTRACTION_FILTER')
 +                if name is None:
 +                    try:
@@ -72,16 +77,16 @@ index 02f5e3b..f7109f3 100755
 +                        + 'and some mode bits are cleared. '
 +                        + 'See https://access.redhat.com/articles/7004769 '
 +                        + 'for more details.',
-+                        RuntimeWarning)
++                        RuntimeWarning, stacklevel=3)
 +                    return tar_filter
                  return fully_trusted_filter
              if isinstance(filter, str):
                  raise TypeError(
 diff --git a/Lib/test/test_shutil.py b/Lib/test/test_shutil.py
-index 5fd8fb4..501da8f 100644
+index 7bc5d12..88b4bdb 100644
 --- a/Lib/test/test_shutil.py
 +++ b/Lib/test/test_shutil.py
-@@ -1950,7 +1950,7 @@ class TestArchives(BaseTest, unittest.TestCase):
+@@ -2096,7 +2096,7 @@ class TestArchives(BaseTest, unittest.TestCase):
          self.check_unpack_archive(format, filter='fully_trusted')
          self.check_unpack_archive(format, filter='data')
          with warnings_helper.check_warnings(
@@ -91,10 +96,48 @@ index 5fd8fb4..501da8f 100644
  
      def test_unpack_archive_tar(self):
 diff --git a/Lib/test/test_tarfile.py b/Lib/test/test_tarfile.py
-index c5fc76d..397e334 100644
+index 3fbd25e..9aa727e 100644
 --- a/Lib/test/test_tarfile.py
 +++ b/Lib/test/test_tarfile.py
-@@ -3097,8 +3097,8 @@ class NoneInfoExtractTests(ReadTest):
+@@ -727,7 +727,17 @@ class MiscReadTestBase(CommonReadTest):
+             tarfile.open(tarname, encoding="iso8859-1") as tar
+         ):
+             directories = [t for t in tar if t.isdir()]
+-            with self.assertWarnsRegex(DeprecationWarning, "Use the filter argument") as cm:
++            with self.assertWarnsRegex(
++                RuntimeWarning,
++                re.escape(
++                    'The default behavior of tarfile extraction has been '
++                    'changed to disallow common exploits '
++                    '(including CVE-2007-4559). '
++                    'By default, absolute/parent paths are disallowed '
++                    'and some mode bits are cleared. '
++                    'See https://access.redhat.com/articles/7004769 '
++                    'for more details.'
++                )) as cm:
+                 tar.extractall(DIR, directories)
+             # check that the stacklevel of the deprecation warning is correct:
+             self.assertEqual(cm.filename, __file__)
+@@ -740,7 +750,17 @@ class MiscReadTestBase(CommonReadTest):
+             tarfile.open(tarname, encoding="iso8859-1") as tar
+         ):
+             tarinfo = tar.getmember(dirtype)
+-            with self.assertWarnsRegex(DeprecationWarning, "Use the filter argument") as cm:
++            with self.assertWarnsRegex(
++                RuntimeWarning,
++                re.escape(
++                    'The default behavior of tarfile extraction has been '
++                    'changed to disallow common exploits '
++                    '(including CVE-2007-4559). '
++                    'By default, absolute/parent paths are disallowed '
++                    'and some mode bits are cleared. '
++                    'See https://access.redhat.com/articles/7004769 '
++                    'for more details.'
++                )) as cm:
+                 tar.extract(tarinfo, path=DIR)
+             # check that the stacklevel of the deprecation warning is correct:
+             self.assertEqual(cm.filename, __file__)
+@@ -3144,8 +3164,8 @@ class NoneInfoExtractTests(ReadTest):
          tar.errorlevel = 0
          with ExitStack() as cm:
              if cls.extraction_filter is None:
@@ -105,7 +148,7 @@ index c5fc76d..397e334 100644
              tar.extractall(cls.control_dir, filter=cls.extraction_filter)
          tar.close()
          cls.control_paths = set(
-@@ -3919,7 +3919,7 @@ class TestExtractionFilters(unittest.TestCase):
+@@ -3966,7 +3986,7 @@ class TestExtractionFilters(unittest.TestCase):
          with ArchiveMaker() as arc:
              arc.add('foo')
          with warnings_helper.check_warnings(
@@ -114,7 +157,7 @@ index c5fc76d..397e334 100644
              with self.check_context(arc.open(), None):
                  self.expect_file('foo')
  
-@@ -4089,6 +4089,123 @@ class TestExtractionFilters(unittest.TestCase):
+@@ -4136,6 +4156,123 @@ class TestExtractionFilters(unittest.TestCase):
              self.expect_exception(TypeError)  # errorlevel is not int
  
  
@@ -235,9 +278,9 @@ index c5fc76d..397e334 100644
 +                self.check_trusted_default(tar, tempdir)
 +
 +
- def setUpModule():
-     os_helper.unlink(TEMPDIR)
-     os.makedirs(TEMPDIR)
+ class OverwriteTests(archiver_tests.OverwriteTests, unittest.TestCase):
+     testdir = os.path.join(TEMPDIR, "testoverwrite")
+ 
 -- 
-2.43.0
+2.44.0
 

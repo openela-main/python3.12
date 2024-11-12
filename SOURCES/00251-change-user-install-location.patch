@@ -30,10 +30,10 @@ Co-authored-by: Lumír Balhar <frenzy.madness@gmail.com>
  3 files changed, 71 insertions(+), 4 deletions(-)
 
 diff --git a/Lib/site.py b/Lib/site.py
-index 672fa7b000..0a9c5be53e 100644
+index 924cfbecec..e2871ecc89 100644
 --- a/Lib/site.py
 +++ b/Lib/site.py
-@@ -377,8 +377,15 @@ def getsitepackages(prefixes=None):
+@@ -398,8 +398,15 @@ def getsitepackages(prefixes=None):
      return sitepackages
  
  def addsitepackages(known_paths, prefixes=None):
@@ -129,7 +129,7 @@ index 122d441bd1..2d354a11da 100644
          # On Windows we want to substitute 'lib' for schemes rather
          # than the native value (without modifying vars, in case it
 diff --git a/Lib/test/test_sysconfig.py b/Lib/test/test_sysconfig.py
-index b6dbf3d52c..4f06a7673c 100644
+index 1137c2032b..8fc2b84f52 100644
 --- a/Lib/test/test_sysconfig.py
 +++ b/Lib/test/test_sysconfig.py
 @@ -110,8 +110,19 @@ def test_get_path(self):
@@ -153,7 +153,7 @@ index b6dbf3d52c..4f06a7673c 100644
                      os.path.normpath(expected),
                  )
  
-@@ -335,7 +346,7 @@ def test_get_config_h_filename(self):
+@@ -344,7 +355,7 @@ def test_get_config_h_filename(self):
          self.assertTrue(os.path.isfile(config_h), config_h)
  
      def test_get_scheme_names(self):
@@ -162,7 +162,7 @@ index b6dbf3d52c..4f06a7673c 100644
          if HAS_USER_BASE:
              wanted.extend(['nt_user', 'osx_framework_user', 'posix_user'])
          self.assertEqual(get_scheme_names(), tuple(sorted(wanted)))
-@@ -347,6 +358,8 @@ def test_symlink(self): # Issue 7880
+@@ -356,6 +367,8 @@ def test_symlink(self): # Issue 7880
              cmd = "-c", "import sysconfig; print(sysconfig.get_platform())"
              self.assertEqual(py.call_real(*cmd), py.call_link(*cmd))
  
