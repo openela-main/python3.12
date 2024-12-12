@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}.1
+Release: 2%{?dist}.2
 License: Python-2.0.1
 
 
@@ -402,6 +402,19 @@ Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
 # CVE-2024-6232: gh-121285: Remove backtracking when parsing tarfile headers
 # Resolved upstream: https://github.com/python/cpython/issues/121285
 Patch437: 00437-CVE-2024-6232.patch
+
+# 00443 #
+# CVE-2024-9287: Virtual environment (venv) activation scripts don't quote paths
+# Resolved upstream: https://github.com/python/cpython/issues/124651
+Patch443: 00443-CVE-2024-9287.patch
+
+# 00445 # d1a32daddefad32ceb93155552858c0a0311b23e
+# CVE-2024-12254: Ensure _SelectorSocketTransport.writelines pauses the protocol if needed
+#
+# Ensure _SelectorSocketTransport.writelines pauses the protocol if it reaches the high water mark as needed.
+#
+# Resolved upstream: https://github.com/python/cpython/issues/127655
+Patch445: 00445-cve-2024-12254-ensure-_selectorsockettransport-writelines-pauses-the-protocol-if-needed.patch
 
 # (New patches go here ^^^)
 #
@@ -1717,6 +1730,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Tue Dec 03 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2.2
+- Security fix for CVE-2024-9287 and CVE-2024-12254
+Resolves: RHEL-64885, RHEL-70316
+
 * Wed Sep 11 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.5-2.1
 - Security fix for CVE-2024-6232
 Resolves: RHEL-57415
