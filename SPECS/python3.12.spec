@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}.2
+Release: 2%{?dist}.3
 License: Python-2.0.1
 
 
@@ -415,6 +415,11 @@ Patch443: 00443-CVE-2024-9287.patch
 #
 # Resolved upstream: https://github.com/python/cpython/issues/127655
 Patch445: 00445-cve-2024-12254-ensure-_selectorsockettransport-writelines-pauses-the-protocol-if-needed.patch
+
+# 00453 #
+# CVE-2024-7592: Denial of Service Vulnerability in http.cookies._unquote()
+# Resolved upstream: https://github.com/python/cpython/issues/123067
+Patch453: 00453-CVE-2024-7592.patch
 
 # (New patches go here ^^^)
 #
@@ -1730,6 +1735,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Wed Apr 02 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.5-2.3
+- Security fix for CVE-2024-7592
+Resolves: RHEL-85300
+
 * Tue Dec 03 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2.2
 - Security fix for CVE-2024-9287 and CVE-2024-12254
 Resolves: RHEL-64885, RHEL-70316
