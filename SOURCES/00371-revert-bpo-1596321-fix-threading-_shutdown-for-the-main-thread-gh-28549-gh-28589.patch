@@ -16,7 +16,7 @@ https://github.com/GrahamDumpleton/mod_wsgi/issues/730
  2 files changed, 8 insertions(+), 50 deletions(-)
 
 diff --git a/Lib/test/test_threading.py b/Lib/test/test_threading.py
-index 2e4b860b97..3066b23ee1 100644
+index 75a56f7830..c2509fced1 100644
 --- a/Lib/test/test_threading.py
 +++ b/Lib/test/test_threading.py
 @@ -1100,39 +1100,6 @@ def noop(): pass

@@ -1,4 +1,4 @@
-From 43ce74d971fad62db6ccd723fe6b01da9c7ff407 Mon Sep 17 00:00:00 2001
+From 11deb3112bd90bc2dce2fcd4a1f5975c08b91360 Mon Sep 17 00:00:00 2001
 From: Charalampos Stratakis <cstratak@redhat.com>
 Date: Thu, 12 Dec 2019 16:58:31 +0100
 Subject: [PATCH 1/5] Expose blake2b and blake2s hashes from OpenSSL
@@ -29,10 +29,10 @@ index 73d758a..5921360 100644
              computed = m.hexdigest() if not shake else m.hexdigest(length)
              self.assertEqual(
 diff --git a/Modules/_hashopenssl.c b/Modules/_hashopenssl.c
-index af6d1b2..980712f 100644
+index 2998820..b96001e 100644
 --- a/Modules/_hashopenssl.c
 +++ b/Modules/_hashopenssl.c
-@@ -1079,6 +1079,41 @@ _hashlib_openssl_sha512_impl(PyObject *module, PyObject *data_obj,
+@@ -1128,6 +1128,41 @@ _hashlib_openssl_sha512_impl(PyObject *module, PyObject *data_obj,
  }
  
  
@@ -74,7 +74,7 @@ index af6d1b2..980712f 100644
  #ifdef PY_OPENSSL_HAS_SHA3
  
  /*[clinic input]
-@@ -2067,6 +2102,8 @@ static struct PyMethodDef EVP_functions[] = {
+@@ -2116,6 +2151,8 @@ static struct PyMethodDef EVP_functions[] = {
      _HASHLIB_OPENSSL_SHA256_METHODDEF
      _HASHLIB_OPENSSL_SHA384_METHODDEF
      _HASHLIB_OPENSSL_SHA512_METHODDEF
@@ -84,7 +84,7 @@ index af6d1b2..980712f 100644
      _HASHLIB_OPENSSL_SHA3_256_METHODDEF
      _HASHLIB_OPENSSL_SHA3_384_METHODDEF
 diff --git a/Modules/clinic/_hashopenssl.c.h b/Modules/clinic/_hashopenssl.c.h
-index fb61a44..1e42b87 100644
+index 84e2346..7fe03a3 100644
 --- a/Modules/clinic/_hashopenssl.c.h
 +++ b/Modules/clinic/_hashopenssl.c.h
 @@ -743,6 +743,156 @@ exit:
@@ -248,13 +248,13 @@ index fb61a44..1e42b87 100644
  #ifndef _HASHLIB_SCRYPT_METHODDEF
      #define _HASHLIB_SCRYPT_METHODDEF
  #endif /* !defined(_HASHLIB_SCRYPT_METHODDEF) */
--/*[clinic end generated code: output=b339e255db698147 input=a9049054013a1b77]*/
-+/*[clinic end generated code: output=1d988d457a8beebe input=a9049054013a1b77]*/
+-/*[clinic end generated code: output=4734184f6555dc95 input=a9049054013a1b77]*/
++/*[clinic end generated code: output=f0bfddb963a21208 input=a9049054013a1b77]*/
 -- 
-2.45.0
+2.47.1
 
 
-From 6872b634078a2c69644235781ebffb07f8edcb83 Mon Sep 17 00:00:00 2001
+From ea9d5c84e25b5c04c2823e1edee4354dd6b2b7a5 Mon Sep 17 00:00:00 2001
 From: Petr Viktorin <pviktori@redhat.com>
 Date: Thu, 25 Jul 2019 17:19:06 +0200
 Subject: [PATCH 2/5] Disable Python's hash implementations in FIPS mode,
@@ -445,10 +445,10 @@ index a8bad9d..1b1d937 100644
 +    if (_Py_hashlib_fips_error(exc, name)) return NULL; \
 +} while (0)
 diff --git a/configure.ac b/configure.ac
-index 65ad1c2..b5f9ab5 100644
+index 9270b5f..a9eb2c9 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -7463,7 +7463,8 @@ PY_STDLIB_MOD([_sha2],
+@@ -7482,7 +7482,8 @@ PY_STDLIB_MOD([_sha2],
  PY_STDLIB_MOD([_sha3], [test "$with_builtin_sha3" = yes])
  PY_STDLIB_MOD([_blake2],
    [test "$with_builtin_blake2" = yes], [],
@@ -459,10 +459,10 @@ index 65ad1c2..b5f9ab5 100644
  PY_STDLIB_MOD([_crypt],
    [], [test "$ac_cv_crypt_crypt" = yes],
 -- 
-2.45.0
+2.47.1
 
 
-From f904abdd7a607282c2cdfd18288045cedfa28414 Mon Sep 17 00:00:00 2001
+From 29a7b7ac9e18a501ed78bde7a449b90c57d44e24 Mon Sep 17 00:00:00 2001
 From: Charalampos Stratakis <cstratak@redhat.com>
 Date: Fri, 29 Jan 2021 14:16:21 +0100
 Subject: [PATCH 3/5] Use python's fall back crypto implementations only if we
@@ -552,10 +552,10 @@ index dd61a9a..6031b02 100644
          get_builtin_constructor = getattr(hashlib,
                                            '__get_builtin_constructor')
 -- 
-2.45.0
+2.47.1
 
 
-From 9bf0a53b7831409613c44fd7feecb56476f5e5e7 Mon Sep 17 00:00:00 2001
+From 59accf544492400c9fd32a8e682fb6f2206e932e Mon Sep 17 00:00:00 2001
 From: Charalampos Stratakis <cstratak@redhat.com>
 Date: Wed, 31 Jul 2019 15:43:43 +0200
 Subject: [PATCH 4/5] Test equivalence of hashes for the various digests with
@@ -712,21 +712,21 @@ index 6031b02..5bd5297 100644
  class KDFTests(unittest.TestCase):
  
 -- 
-2.45.0
+2.47.1
 
 
-From 8a76571515a64a57b4ea0586ae8376cf2ef0ac60 Mon Sep 17 00:00:00 2001
+From 21efadd8b488956482bdc6ccd91c37dcef705129 Mon Sep 17 00:00:00 2001
 From: Petr Viktorin <pviktori@redhat.com>
 Date: Mon, 26 Aug 2019 19:39:48 +0200
 Subject: [PATCH 5/5] Guard against Python HMAC in FIPS mode
 
 ---
- Lib/hmac.py           | 13 +++++++++----
+ Lib/hmac.py           | 12 +++++++++---
  Lib/test/test_hmac.py | 10 ++++++++++
- 2 files changed, 19 insertions(+), 4 deletions(-)
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
 diff --git a/Lib/hmac.py b/Lib/hmac.py
-index 8b4eb2f..e8e4864 100644
+index 8b4eb2f..8930bda 100644
 --- a/Lib/hmac.py
 +++ b/Lib/hmac.py
 @@ -16,8 +16,9 @@ else:
@@ -741,14 +741,7 @@ index 8b4eb2f..e8e4864 100644
  
  # The size of the digests returned by HMAC depends on the underlying
  # hashing module used.  Use digest_size from the instance of HMAC instead.
-@@ -48,17 +49,18 @@ class HMAC:
-                    msg argument.  Passing it as a keyword argument is
-                    recommended, though not required for legacy API reasons.
-         """
--
-         if not isinstance(key, (bytes, bytearray)):
-             raise TypeError("key: expected bytes or bytearray, but got %r" % type(key).__name__)
- 
+@@ -55,10 +56,12 @@ class HMAC:
          if not digestmod:
              raise TypeError("Missing required argument 'digestmod'.")
  
@@ -762,7 +755,7 @@ index 8b4eb2f..e8e4864 100644
                  self._init_old(key, msg, digestmod)
          else:
              self._init_old(key, msg, digestmod)
-@@ -69,6 +71,9 @@ class HMAC:
+@@ -69,6 +72,9 @@ class HMAC:
          self.block_size = self._hmac.block_size
  
      def _init_old(self, key, msg, digestmod):
@@ -829,5 +822,5 @@ index 1502fba..7997073 100644
      def test_realcopy_old(self):
          # Testing if the copy method created a real copy.
 -- 
-2.45.0
+2.47.1
 

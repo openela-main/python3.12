@@ -16,11 +16,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.5
+%global general_version %{pybasever}.9
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}.3
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -66,7 +66,7 @@ License: Python-2.0.1
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
-%global pip_version 24.2
+%global pip_version 24.3.1
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
@@ -74,8 +74,8 @@ License: Python-2.0.1
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
 %global pip_bundled_provides %{expand:
 Provides: bundled(python3dist(cachecontrol)) = 0.14
-Provides: bundled(python3dist(certifi)) = 2024.7.4
-Provides: bundled(python3dist(distlib)) = 0.3.8
+Provides: bundled(python3dist(certifi)) = 2024.8.30
+Provides: bundled(python3dist(distlib)) = 0.3.9
 Provides: bundled(python3dist(distro)) = 1.9
 Provides: bundled(python3dist(idna)) = 3.7
 Provides: bundled(python3dist(msgpack)) = 1.0.8
@@ -88,9 +88,9 @@ Provides: bundled(python3dist(resolvelib)) = 1.0.1
 Provides: bundled(python3dist(rich)) = 13.7.1
 Provides: bundled(python3dist(setuptools)) = 70.3
 Provides: bundled(python3dist(tomli)) = 2.0.1
-Provides: bundled(python3dist(truststore)) = 0.9.1
+Provides: bundled(python3dist(truststore)) = 0.10
 Provides: bundled(python3dist(typing-extensions)) = 4.12.2
-Provides: bundled(python3dist(urllib3)) = 1.26.18
+Provides: bundled(python3dist(urllib3)) = 1.26.20
 }
 # setuptools
 # vendor.txt files not in .whl
@@ -329,7 +329,7 @@ Source11: idle3.appdata.xml
 
 # (Patches taken from github.com/fedora-python/cpython)
 
-# 00251 # cae5a6abc5df08239c85b83e4e250b6f2702e4f5
+# 00251 # 6a4ec74157aa01f1ada9f29f30a371cd9e5369e8
 # Change user install location
 #
 # Set values of base and platbase in sysconfig from /usr
@@ -378,48 +378,12 @@ Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-g
 # - https://access.redhat.com/articles/7004769
 Patch397: 00397-tarfile-filter.patch
 
-# 00415 # 83e0fc3ec7bc38055c536f482578a10f6efcc08c
-# [CVE-2023-27043] gh-102988: Reject malformed addresses in email.parseaddr() (#111116)
-#
-# Detect email address parsing errors and return empty tuple to
-# indicate the parsing error (old API). Add an optional 'strict'
-# parameter to getaddresses() and parseaddr() functions. Patch by
-# Thomas Dwyer.
-Patch415: 00415-cve-2023-27043-gh-102988-reject-malformed-addresses-in-email-parseaddr-111116.patch
-
 # 00422 # a353cebef737c41420dc7ae2469dd657371b8881
 # Fix tests for XMLPullParser with Expat 2.6.0
 #
 # Feeding the parser by too small chunks defers parsing to prevent
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
-
-# 00436 # c76cc2aa3a2c30375ade4859b732ada851cc89ed
-# [CVE-2024-8088] gh-122905: Sanitize names in zipfile.Path.
-Patch436: 00436-cve-2024-8088-gh-122905-sanitize-names-in-zipfile-path.patch
-
-# 00437 #
-# CVE-2024-6232: gh-121285: Remove backtracking when parsing tarfile headers
-# Resolved upstream: https://github.com/python/cpython/issues/121285
-Patch437: 00437-CVE-2024-6232.patch
-
-# 00443 #
-# CVE-2024-9287: Virtual environment (venv) activation scripts don't quote paths
-# Resolved upstream: https://github.com/python/cpython/issues/124651
-Patch443: 00443-CVE-2024-9287.patch
-
-# 00445 # d1a32daddefad32ceb93155552858c0a0311b23e
-# CVE-2024-12254: Ensure _SelectorSocketTransport.writelines pauses the protocol if needed
-#
-# Ensure _SelectorSocketTransport.writelines pauses the protocol if it reaches the high water mark as needed.
-#
-# Resolved upstream: https://github.com/python/cpython/issues/127655
-Patch445: 00445-cve-2024-12254-ensure-_selectorsockettransport-writelines-pauses-the-protocol-if-needed.patch
-
-# 00453 #
-# CVE-2024-7592: Denial of Service Vulnerability in http.cookies._unquote()
-# Resolved upstream: https://github.com/python/cpython/issues/123067
-Patch453: 00453-CVE-2024-7592.patch
 
 # (New patches go here ^^^)
 #
@@ -1735,17 +1699,19 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Wed Apr 02 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.5-2.3
-- Security fix for CVE-2024-7592
-Resolves: RHEL-85300
+* Tue Feb 04 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-1
+- Update to 3.12.9
+- Security fix for CVE-2025-0938
+Resolves: RHEL-77261
 
-* Tue Dec 03 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2.2
+* Tue Dec 03 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.8-1
+- Update to 3.12.8
 - Security fix for CVE-2024-9287 and CVE-2024-12254
-Resolves: RHEL-64885, RHEL-70316
+Resolves: RHEL-64886, RHEL-70320
 
-* Wed Sep 11 2024 Lumír Balhar <lbalhar@redhat.com> - 3.12.5-2.1
-- Security fix for CVE-2024-6232
-Resolves: RHEL-57415
+* Mon Sep 09 2024 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.6-1
+- Update to 3.12.6
+Resolves: RHEL-57417
 
 * Fri Aug 23 2024 Charalampos Stratakis <cstratak@redhat.com> - 3.12.5-2
 - Security fix for CVE-2024-8088
