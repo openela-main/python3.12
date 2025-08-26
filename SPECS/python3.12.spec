@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -388,6 +388,14 @@ Patch397: 00397-tarfile-filter.patch
 # Feeding the parser by too small chunks defers parsing to prevent
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
+
+# 00467 #
+# CVE-2025-8194
+#
+# tarfile now validates archives to ensure member offsets are non-negative.
+#
+# Upstream PR: https://github.com/python/cpython/pull/137171
+Patch467: 00467-CVE-2025-8194.patch
 
 # (New patches go here ^^^)
 #
@@ -1879,6 +1887,10 @@ fi
 # ======================================================
 
 %changelog
+* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.11-2
+- Security fix for CVE-2025-8194
+Resolves: RHEL-106343
+
 * Wed Jun 04 2025 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.11-1
 - Update to 3.12.11
 - Security fixes for CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718, CVE-2025-4435
