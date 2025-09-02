@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}.1
+Release: 1%{?dist}.2
 License: Python-2.0.1
 
 
@@ -391,6 +391,14 @@ Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 #
 # Resolved upstream: https://github.com/python/cpython/pull/135066
 Patch465: 00465-tarfile-cves.patch
+
+# 00467 #
+# CVE-2025-8194
+#
+# tarfile now validates archives to ensure member offsets are non-negative.
+#
+# Upstream PR: https://github.com/python/cpython/pull/137171
+Patch467: 00467-CVE-2025-8194.patch
 
 # (New patches go here ^^^)
 #
@@ -1706,6 +1714,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.9-1.2
+- Security fix for CVE-2025-8194
+Resolves: RHEL-106370
+
 * Fri Jun 20 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-1.1
 - Security fixes for CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718, CVE-2025-4435
 - Resolves: RHEL-98058, RHEL-98020, RHEL-97809, RHEL-98184, RHEL-98211
