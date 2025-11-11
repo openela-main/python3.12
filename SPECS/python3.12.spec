@@ -16,11 +16,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.9
+%global general_version %{pybasever}.11
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}.2
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -66,28 +66,28 @@ License: Python-2.0.1
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
-%global pip_version 24.3.1
+%global pip_version 25.0.1
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
 # pip
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
 %global pip_bundled_provides %{expand:
-Provides: bundled(python3dist(cachecontrol)) = 0.14
+Provides: bundled(python3dist(cachecontrol)) = 0.14.1
 Provides: bundled(python3dist(certifi)) = 2024.8.30
 Provides: bundled(python3dist(distlib)) = 0.3.9
 Provides: bundled(python3dist(distro)) = 1.9
-Provides: bundled(python3dist(idna)) = 3.7
-Provides: bundled(python3dist(msgpack)) = 1.0.8
-Provides: bundled(python3dist(packaging)) = 24.1
-Provides: bundled(python3dist(platformdirs)) = 4.2.2
+Provides: bundled(python3dist(idna)) = 3.10
+Provides: bundled(python3dist(msgpack)) = 1.1
+Provides: bundled(python3dist(packaging)) = 24.2
+Provides: bundled(python3dist(platformdirs)) = 4.3.6
 Provides: bundled(python3dist(pygments)) = 2.18
-Provides: bundled(python3dist(pyproject-hooks)) = 1
+Provides: bundled(python3dist(pyproject-hooks)) = 1.2
 Provides: bundled(python3dist(requests)) = 2.32.3
 Provides: bundled(python3dist(resolvelib)) = 1.0.1
-Provides: bundled(python3dist(rich)) = 13.7.1
+Provides: bundled(python3dist(rich)) = 13.9.4
 Provides: bundled(python3dist(setuptools)) = 70.3
-Provides: bundled(python3dist(tomli)) = 2.0.1
+Provides: bundled(python3dist(tomli)) = 2.2.1
 Provides: bundled(python3dist(truststore)) = 0.10
 Provides: bundled(python3dist(typing-extensions)) = 4.12.2
 Provides: bundled(python3dist(urllib3)) = 1.26.20
@@ -279,6 +279,7 @@ BuildRequires: valgrind-devel
 BuildRequires: xz-devel
 BuildRequires: zlib-devel
 
+BuildRequires: systemtap-sdt-devel
 BuildRequires: /usr/bin/dtrace
 
 # workaround http://bugs.python.org/issue19804 (test_uuid requires ifconfig)
@@ -385,12 +386,28 @@ Patch397: 00397-tarfile-filter.patch
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 
-# 00465 #
-# Security fixes for:
-# CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718 and CVE-2025-4435 in the tarfile module.
+# 00459 # 906f6692bd85034012c9554f2434627ccfc04c67
+# Apply Intel Control-flow Technology for x86-64
 #
-# Resolved upstream: https://github.com/python/cpython/pull/135066
-Patch465: 00465-tarfile-cves.patch
+# Required for mitigation against return-oriented programming (ROP) and Call or Jump Oriented Programming (COP/JOP) attacks
+#
+# Proposed upstream: https://github.com/python/cpython/pull/128606
+#
+# See also: https://sourceware.org/annobin/annobin.html/Test-cf-protection.html
+Patch459: 00459-apply-intel-control-flow-technology-for-x86-64.patch
+
+# 00462 # 5324dc5f57e0068f7e4f7b2f20006e88ff5f4e47
+# Fix PySSL_SetError handling SSL_ERROR_SYSCALL
+#
+# Python 3.10 changed from using SSL_write() and SSL_read() to SSL_write_ex() and
+# SSL_read_ex(), but did not update handling of the return value.
+#
+# Change error handling so that the return value is not examined.
+# OSError (not EOF) is now returned when retval is 0.
+#
+# This resolves the issue of failing tests when a system is
+# stressed on OpenSSL 3.5.
+Patch462: 00462-fix-pyssl_seterror-handling-ssl_error_syscall.patch
 
 # 00467 #
 # CVE-2025-8194
@@ -1714,13 +1731,27 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.9-1.2
+* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.11-2
 - Security fix for CVE-2025-8194
-Resolves: RHEL-106370
+Resolves: RHEL-106369
 
-* Fri Jun 20 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-1.1
+* Wed Jun 04 2025 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.11-1
+- Update to 3.12.11
 - Security fixes for CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718, CVE-2025-4435
-- Resolves: RHEL-98058, RHEL-98020, RHEL-97809, RHEL-98184, RHEL-98211
+Resolves: RHEL-98057, RHEL-98019, RHEL-97811, RHEL-98183, RHEL-98210
+
+* Fri May 09 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.10-3
+- Fix PySSL_SetError handling SSL_ERROR_SYSCALL
+- This fixes random flakiness of test_ssl on stressed machines
+Resolves: RHEL-88897
+
+* Tue Apr 22 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.10-2
+- Apply Intel's CET for mitigation against control-flow hijacking attacks
+Resolves: RHEL-88326
+
+* Wed Apr 09 2025 Miro Hrončok <mhroncok@redhat.com> - 3.12.10-1
+- Update to 3.12.10
+Resolves: RHEL-86887
 
 * Tue Feb 04 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-1
 - Update to 3.12.9
