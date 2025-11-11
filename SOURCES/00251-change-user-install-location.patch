@@ -51,7 +51,7 @@ index aed254ad50..568dbdb945 100644
          if os.path.isdir(sitedir):
              addsitedir(sitedir, known_paths)
 diff --git a/Lib/sysconfig.py b/Lib/sysconfig.py
-index 7dd63b9355..41a151e70e 100644
+index acc8d4d182..6355669f62 100644
 --- a/Lib/sysconfig.py
 +++ b/Lib/sysconfig.py
 @@ -104,6 +104,11 @@
@@ -86,7 +86,7 @@ index 7dd63b9355..41a151e70e 100644
  _SCHEME_KEYS = ('stdlib', 'platstdlib', 'purelib', 'platlib', 'include',
                  'scripts', 'data')
  
-@@ -261,11 +279,40 @@ def _extend_dict(target_dict, other_dict):
+@@ -268,11 +286,40 @@ def _extend_dict(target_dict, other_dict):
          target_dict[key] = value
  
  
@@ -129,7 +129,7 @@ index 7dd63b9355..41a151e70e 100644
          # On Windows we want to substitute 'lib' for schemes rather
          # than the native value (without modifying vars, in case it
 diff --git a/Lib/test/test_sysconfig.py b/Lib/test/test_sysconfig.py
-index 3468d0ce02..ff31010427 100644
+index 67647e1b78..7baddaa9d6 100644
 --- a/Lib/test/test_sysconfig.py
 +++ b/Lib/test/test_sysconfig.py
 @@ -119,8 +119,19 @@ def test_get_path(self):

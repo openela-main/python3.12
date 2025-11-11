@@ -13,11 +13,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.9
+%global general_version %{pybasever}.11
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}.3
+Release: 3%{?dist}
 License: Python-2.0.1
 
 
@@ -71,28 +71,28 @@ License: Python-2.0.1
 # If the rpmwheels condition is disabled, we use the bundled wheel packages
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
-%global pip_version 24.3.1
+%global pip_version 25.0.1
 %global setuptools_version 67.6.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
 # pip
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt)
 %global pip_bundled_provides %{expand:
-Provides: bundled(python3dist(cachecontrol)) = 0.14
+Provides: bundled(python3dist(cachecontrol)) = 0.14.1
 Provides: bundled(python3dist(certifi)) = 2024.8.30
 Provides: bundled(python3dist(distlib)) = 0.3.9
 Provides: bundled(python3dist(distro)) = 1.9
-Provides: bundled(python3dist(idna)) = 3.7
-Provides: bundled(python3dist(msgpack)) = 1.0.8
-Provides: bundled(python3dist(packaging)) = 24.1
-Provides: bundled(python3dist(platformdirs)) = 4.2.2
+Provides: bundled(python3dist(idna)) = 3.10
+Provides: bundled(python3dist(msgpack)) = 1.1
+Provides: bundled(python3dist(packaging)) = 24.2
+Provides: bundled(python3dist(platformdirs)) = 4.3.6
 Provides: bundled(python3dist(pygments)) = 2.18
-Provides: bundled(python3dist(pyproject-hooks)) = 1
+Provides: bundled(python3dist(pyproject-hooks)) = 1.2
 Provides: bundled(python3dist(requests)) = 2.32.3
 Provides: bundled(python3dist(resolvelib)) = 1.0.1
-Provides: bundled(python3dist(rich)) = 13.7.1
+Provides: bundled(python3dist(rich)) = 13.9.4
 Provides: bundled(python3dist(setuptools)) = 70.3
-Provides: bundled(python3dist(tomli)) = 2.0.1
+Provides: bundled(python3dist(tomli)) = 2.2.1
 Provides: bundled(python3dist(truststore)) = 0.10
 Provides: bundled(python3dist(typing-extensions)) = 4.12.2
 Provides: bundled(python3dist(urllib3)) = 1.26.20
@@ -401,18 +401,6 @@ Patch371: 00371-revert-bpo-1596321-fix-threading-_shutdown-for-the-main-thread-g
 # - https://access.redhat.com/articles/7004769
 Patch397: 00397-tarfile-filter.patch
 
-# 00452 # eb11d070c5af7d1b5e47f4e02186152d08eaf793
-# Properly apply exported CFLAGS for dtrace/systemtap builds
-#
-# When using --with-dtrace the resulting object file could be missing
-# specific CFLAGS exported by the build system due to the systemtap
-# script using specific defaults.
-#
-# Exporting the CC and CFLAGS variables before the dtrace invocation
-# allows us to properly apply CFLAGS exported by the build system
-# even when cross-compiling.
-Patch452: 00452-properly-apply-exported-cflags-for-dtrace-systemtap-builds.patch
-
 # 00459 # 906f6692bd85034012c9554f2434627ccfc04c67
 # Apply Intel Control-flow Technology for x86-64
 #
@@ -422,6 +410,19 @@ Patch452: 00452-properly-apply-exported-cflags-for-dtrace-systemtap-builds.patch
 #
 # See also: https://sourceware.org/annobin/annobin.html/Test-cf-protection.html
 Patch459: 00459-apply-intel-control-flow-technology-for-x86-64.patch
+
+# 00462 # 5324dc5f57e0068f7e4f7b2f20006e88ff5f4e47
+# Fix PySSL_SetError handling SSL_ERROR_SYSCALL
+#
+# Python 3.10 changed from using SSL_write() and SSL_read() to SSL_write_ex() and
+# SSL_read_ex(), but did not update handling of the return value.
+#
+# Change error handling so that the return value is not examined.
+# OSError (not EOF) is now returned when retval is 0.
+#
+# This resolves the issue of failing tests when a system is
+# stressed on OpenSSL 3.5.
+Patch462: 00462-fix-pyssl_seterror-handling-ssl_error_syscall.patch
 
 # 00464 # 1c713e02a26bf8865bb6421749d19d0766cac178
 # Enable PAC and BTI protections for aarch64
@@ -439,13 +440,6 @@ Patch459: 00459-apply-intel-control-flow-technology-for-x86-64.patch
 # Since we don't utilize frame pointers on RHEL and CS, Perf profiling
 # will not show the Python functions, irrespective of this patch.
 Patch464: 00464-enable-pac-and-bti-protections-for-aarch64.patch
-
-# 00465 #
-# Security fixes for:
-# CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718 and CVE-2025-4435 in the tarfile module.
-#
-# Resolved upstream: https://github.com/python/cpython/pull/135066
-Patch465: 00465-tarfile-cves.patch
 
 # 00467 #
 # CVE-2025-8194
@@ -1819,18 +1813,31 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.9-2.3
+* Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.11-3
 - Security fix for CVE-2025-8194
-Resolves: RHEL-106330
+Resolves: RHEL-106329
 
-* Fri Jun 20 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-2.2
-- Security fixes for CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718, CVE-2025-4435
+* Thu Jun 12 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.11-2
 - Enable PAC and BTI hardware protections for aarch64
-- Resolves: RHEL-98059, RHEL-98046, RHEL-97812, RHEL-98061, RHEL-98179, RHEL-98865
+Resolves: RHEL-84196
 
-* Tue Apr 22 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-2.1
+* Wed Jun 04 2025 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.11-1
+- Update to 3.12.11
+- Security fixes for CVE-2025-4517, CVE-2025-4330, CVE-2025-4138, CVE-2024-12718, CVE-2025-4435
+Resolves: RHEL-98060, RHEL-98047, RHEL-97813, RHEL-98062, RHEL-98180
+
+* Fri May 09 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.10-3
+- Fix PySSL_SetError handling SSL_ERROR_SYSCALL
+- This fixes random flakiness of test_ssl on stressed machines
+Resolves: RHEL-90555
+
+* Tue Apr 22 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.10-2
 - Apply Intel's CET for mitigation against control-flow hijacking attacks
-Resolves: RHEL-88325
+Resolves: RHEL-67040
+
+* Wed Apr 09 2025 Miro Hrončok <mhroncok@redhat.com> - 3.12.10-1
+- Update to 3.12.10
+Resolves: RHEL-86605
 
 * Mon Mar 31 2025 Charalampos Stratakis <cstratak@redhat.com> - 3.12.9-2
 - Properly apply exported CFLAGS for dtrace/systemtap builds
