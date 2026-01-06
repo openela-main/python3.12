@@ -16,11 +16,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.11
+%global general_version %{pybasever}.12
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -66,7 +66,7 @@ License: Python-2.0.1
 # from Python with the versions below.
 # This needs to be manually updated when we update Python.
 %global pip_version 25.0.1
-%global setuptools_version 67.6.1
+%global setuptools_version 79.0.1
 %global wheel_version 0.40.0
 # All of those also include a list of indirect bundled libs:
 # pip
@@ -92,22 +92,25 @@ Provides: bundled(python3dist(typing-extensions)) = 4.12.2
 Provides: bundled(python3dist(urllib3)) = 1.26.20
 }
 # setuptools
-# vendor.txt files not in .whl
-#  $ %%{_rpmconfigdir}/pythonbundles.py \
-#    <(curl -L https://github.com/pypa/setuptools/raw/v%%{setuptools_version}/setuptools/_vendor/vendored.txt) \
-#    <(curl -L https://github.com/pypa/setuptools/raw/v%%{setuptools_version}/pkg_resources/_vendor/vendored.txt)
+# vendor.txt not in .whl
+# %%{_rpmconfigdir}/pythonbundles.py <(unzip -l Lib/test/wheeldata/setuptools-*.whl | grep -E '_vendor/.+dist-info/RECORD' | sed -E 's@^.*/([^-]+)-([^-]+)\.dist-info/.*$@\1==\2@')
 %global setuptools_bundled_provides %{expand:
-Provides: bundled(python3dist(importlib-metadata)) = 6
-Provides: bundled(python3dist(importlib-resources)) = 5.10.2
-Provides: bundled(python3dist(jaraco-text)) = 3.7
-Provides: bundled(python3dist(more-itertools)) = 8.8
-Provides: bundled(python3dist(ordered-set)) = 3.1.1
-Provides: bundled(python3dist(packaging)) = 23
-Provides: bundled(python3dist(platformdirs)) = 2.6.2
+Provides: bundled(python3dist(autocommand)) = 2.2.2
+Provides: bundled(python3dist(backports-tarfile)) = 1.2
+Provides: bundled(python3dist(importlib-metadata)) = 8
+Provides: bundled(python3dist(inflect)) = 7.3.1
+Provides: bundled(python3dist(jaraco-collections)) = 5.1
+Provides: bundled(python3dist(jaraco-context)) = 5.3
+Provides: bundled(python3dist(jaraco-functools)) = 4.0.1
+Provides: bundled(python3dist(jaraco-text)) = 3.12.1
+Provides: bundled(python3dist(more-itertools)) = 10.3
+Provides: bundled(python3dist(packaging)) = 24.2
+Provides: bundled(python3dist(platformdirs)) = 4.2.2
 Provides: bundled(python3dist(tomli)) = 2.0.1
-Provides: bundled(python3dist(typing-extensions)) = 4.0.1
-Provides: bundled(python3dist(typing-extensions)) = 4.4
-Provides: bundled(python3dist(zipp)) = 3.7
+Provides: bundled(python3dist(typeguard)) = 4.3
+Provides: bundled(python3dist(typing-extensions)) = 4.12.2
+Provides: bundled(python3dist(wheel)) = 0.45.1
+Provides: bundled(python3dist(zipp)) = 3.19.2
 }
 # wheel
 #  $ %%{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt)
@@ -389,13 +392,12 @@ Patch397: 00397-tarfile-filter.patch
 # CVE-2023-52425. Future versions of Expat may be more reactive.
 Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 
-# 00467 #
-# CVE-2025-8194
+# 00471 #
+# CVE-2025-12084
 #
-# tarfile now validates archives to ensure member offsets are non-negative.
-#
-# Upstream PR: https://github.com/python/cpython/pull/137171
-Patch467: 00467-CVE-2025-8194.patch
+# gh-142145: Remove quadratic behavior in node ID cache clearing (GH-142146)
+# gh-142754: Ensure that Element & Attr instances have the ownerDocument attribute (GH-142794)
+Patch471: 00471-CVE-2025-12084.patch
 
 # (New patches go here ^^^)
 #
@@ -1887,6 +1889,11 @@ fi
 # ======================================================
 
 %changelog
+* Fri Oct 10 2025 Karolina Surma <ksurma@redhat.com> - 3.12.12-1
+- Update to 3.12.12
+- Security fix for CVE-2025-8291 and CVE-2025-12084
+Resolves: RHEL-128364, RHEL-135391
+
 * Thu Aug 14 2025 Lumír Balhar <lbalhar@redhat.com> - 3.12.11-2
 - Security fix for CVE-2025-8194
 Resolves: RHEL-106343
