@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 4%{?dist}
 License: Python-2.0.1
 
 
@@ -402,6 +402,27 @@ Patch422: 00422-fix-tests-for-xmlpullparser-with-expat-2-6-0.patch
 # stressed on OpenSSL 3.5.
 Patch462: 00462-fix-pyssl_seterror-handling-ssl_error_syscall.patch
 
+# 00471 # 37c05f26d11e8e24f2a760167015a267996b1d69
+# CVE-2025-12084
+#
+# * gh-142145: Remove quadratic behavior in node ID cache clearing (GH-142146)
+# * gh-142754: Ensure that Element & Attr instances have the ownerDocument attribute (GH-142794)
+Patch471: 00471-cve-2025-12084.patch
+
+# 00472 # 2ba215eaba508b2cdd7c3acfdf3b9a6e32872274
+# CVE-2025-13836
+#
+# [3.12] gh-119451: Fix a potential denial of service in http.client (GH-119454) (#142140)
+#
+# gh-119451: Fix a potential denial of service in http.client (GH-119454)
+#
+# Reading the whole body of the HTTP response could cause OOM if
+# the Content-Length value is too large even if the server does not send
+# a large amount of data. Now the HTTP client reads large data by chunks,
+# therefore the amount of consumed memory is proportional to the amount
+# of sent data.
+Patch472: 00472-cve-2025-13836.patch
+
 # (New patches go here ^^^)
 #
 # When adding new patches to "python" and "python3" in Fedora, EL, etc.,
@@ -728,6 +749,7 @@ The debug runtime additionally supports debug builds of C-API extensions
 if [ -f %{_rpmconfigdir}/pythonbundles.py ]; then
   %{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/ensurepip/_bundled/pip-*.whl pip/_vendor/vendor.txt) --compare-with '%pip_bundled_provides'
   %{_rpmconfigdir}/pythonbundles.py <(unzip -p Lib/test/wheeldata/wheel-*.whl wheel/vendored/vendor.txt) --compare-with '%wheel_bundled_provides'
+  %{_rpmconfigdir}/pythonbundles.py <(unzip -l Lib/test/wheeldata/setuptools-*.whl | grep -E '_vendor/.+dist-info/RECORD' | sed -E 's@^.*/([^-]+)-([^-]+)\.dist-info/.*$@\1==\2@') --compare-with '%setuptools_bundled_provides'
 fi
 
 %if %{with rpmwheels}
@@ -1716,6 +1738,18 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Mon Jan 19 2026 Lumír Balhar <lbalhar@redhat.com> - 3.12.12-4
+- Release bump to correct the build for wrong release
+Related: RHEL-141026
+
+* Fri Jan 16 2026 Lumír Balhar <lbalhar@redhat.com> - 3.12.12-3
+- Security fix for CVE-2025-13836
+Resolves: RHEL-141026
+
+* Thu Jan 08 2026 Lumír Balhar <lbalhar@redhat.com> - 3.12.12-2
+- Security fix for CVE-2025-12084
+Resolves: RHEL-135399
+
 * Fri Nov 14 2025 RHEL Packaging Agent <jotnar@redhat.com> - 3.12.12-1
 - Update to 3.12.12
 Resolves: RHEL-125856
