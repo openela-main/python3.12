@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 4%{?dist}.1
+Release: 4%{?dist}.2
 License: Python-2.0.1
 
 
@@ -453,6 +453,12 @@ Patch475: 00475-cve-2025-15367.patch
 #
 # gh-144125: email: verify headers are sound in BytesGenerator
 Patch476: 00476-cve-2026-1299.patch
+
+# 00478 # eb93352dc8e31f4d52546b84daad875e6ff7f29e
+# CVE-2026-4519
+#
+# Reject leading dashes in webbrowser URLs (GH-146360)
+Patch478: 00478-cve-2026-4519.patch
 
 # (New patches go here ^^^)
 #
@@ -1769,6 +1775,10 @@ CheckPython optimized
 # ======================================================
 
 %changelog
+* Fri Mar 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-4.2
+- Security fix for CVE-2026-4519
+Resolves: RHEL-158051
+
 * Fri Feb 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-4.1
 - Security fixes for CVE-2026-0865, CVE-2025-15366, CVE-2025-15367 and CVE-2026-1299
 Resolves: RHEL-143106 RHEL-143168 RHEL-144891
