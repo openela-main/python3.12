@@ -13,11 +13,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.12
+%global general_version %{pybasever}.13
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 3%{?dist}.3
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -347,6 +347,9 @@ Source2: https://github.com/Yhg1s.gpg
 # Originally written by bkabrda
 Source8: check-pyc-timestamps.py
 
+# A script that determines the required expat version
+Source9: expat-requires.py
+
 # Desktop menu entry for idle3
 Source10: idle3.desktop
 
@@ -434,36 +437,6 @@ Patch462: 00462-fix-pyssl_seterror-handling-ssl_error_syscall.patch
 # will not show the Python functions, irrespective of this patch.
 Patch464: 00464-enable-pac-and-bti-protections-for-aarch64.patch
 
-# 00471 # 37c05f26d11e8e24f2a760167015a267996b1d69
-# CVE-2025-12084
-#
-# * gh-142145: Remove quadratic behavior in node ID cache clearing (GH-142146)
-# * gh-142754: Ensure that Element & Attr instances have the ownerDocument attribute (GH-142794)
-Patch471: 00471-cve-2025-12084.patch
-
-# 00472 # 2ba215eaba508b2cdd7c3acfdf3b9a6e32872274
-# CVE-2025-13836
-#
-# [3.12] gh-119451: Fix a potential denial of service in http.client (GH-119454) (#142140)
-#
-# gh-119451: Fix a potential denial of service in http.client (GH-119454)
-#
-# Reading the whole body of the HTTP response could cause OOM if
-# the Content-Length value is too large even if the server does not send
-# a large amount of data. Now the HTTP client reads large data by chunks,
-# therefore the amount of consumed memory is proportional to the amount
-# of sent data.
-Patch472: 00472-cve-2025-13836.patch
-
-# 00473 # dd705786aa0c1ccfde913858598e34e1f196be2e
-# CVE-2026-0865
-#
-#  gh-143916: Reject control characters in wsgiref.headers.Headers  (GH-143917)
-#
-# * Add 'test.support' fixture for C0 control characters
-# * gh-143916: Reject control characters in wsgiref.headers.Headers
-Patch473: 00473-cve-2026-0865.patch
-
 # 00474 # 837ddca0372fa87ff9cee47142200caa21e77def
 # CVE-2025-15366
 #
@@ -480,17 +453,17 @@ Patch474: 00474-cve-2025-15366.patch
 # (cherry-picked from commit b234a2b67539f787e191d2ef19a7cbdce32874e7)
 Patch475: 00475-cve-2025-15367.patch
 
-# 00476
-# CVE-2026-1299
-#
-# gh-144125: email: verify headers are sound in BytesGenerator
-Patch476: 00476-cve-2026-1299.patch
-
 # 00478 # eb93352dc8e31f4d52546b84daad875e6ff7f29e
 # CVE-2026-4519
 #
 # Reject leading dashes in webbrowser URLs (GH-146360)
 Patch478: 00478-cve-2026-4519.patch
+
+# 00479 # 97404b2cf62e545c2d41be7ccfed4e74da9ee665
+# CVE-2026-1502
+#
+# Reject CR/LF in HTTP tunnel request headers
+Patch479: 00479-cve-2026-1502.patch
 
 # 00480 # 6f4eef3ba4d9818a53698e994550ee8db17a1e2e
 # CVE-2026-4786
@@ -503,6 +476,24 @@ Patch480: 00480-cve-2026-4786.patch
 #
 # Fix a possible UAF in {LZMA,BZ2,_Zlib}Decompressor
 Patch482: 00482-cve-2026-6100.patch
+
+# 00483 # 577c595137ce6ff92158ddaf2d7b7ea86437825d
+# CVE-2026-2297
+#
+# Logging Bypass in Legacy .pyc File Handling
+Patch483: 00483-cve-2026-2297.patch
+
+# 00484 # 8b5133c1ab17a060cd134bea2a4b6e1831c47fed
+# CVE-2026-3644
+#
+# Incomplete control character validation in http.cookies
+Patch484: 00484-cve-2026-3644.patch
+
+# 00485 # 12a5b206676927bcee131ab4f2bd6783d2f5914a
+# CVE-2026-4224
+#
+# Stack overflow parsing XML with deeply nested DTD content models
+Patch485: 00485-cve-2026-4224.patch
 
 # (New patches go here ^^^)
 #
@@ -662,12 +653,13 @@ Recommends: (%{pkgname}-tkinter%{?_isa} = %{version}-%{release} if tk%{?_isa})
 Requires: tzdata
 
 # The requirement on libexpat is generated, but we need to version it.
-# When built with expat >= 2.6, but installed with older expat, we get:
+# When built with newer expat, but installed with older expat, we get:
 #   ImportError: /usr/lib64/python3.X/lib-dynload/pyexpat.cpython-....so:
 #   undefined symbol: XML_SetReparseDeferralEnabled
 # This breaks many things, including python -m venv.
 # Other subpackages (like -debug) also need this, but they all depend on -libs.
-Requires: expat >= 2.6
+%global expat_min_version 2.7.2
+Requires: expat%{_isa} >= %{expat_min_version}
 
 %description -n %{pkgname}-libs
 This package contains runtime libraries for use by Python:
@@ -1312,6 +1304,11 @@ for Module in %{buildroot}/%{dynload_dir}/*.so ; do
     esac
 done
 
+# Check the expat compatibility
+expat_found=$(LD_LIBRARY_PATH="%{buildroot}%{_libdir}" PYTHONPATH="%{buildroot}%{pylibdir}" %{buildroot}%{_bindir}/python%{pybasever} %{SOURCE9})
+if [ "${expat_found}" != "%{expat_min_version}" ]; then
+    echo "Found expat version is different than the declared one, found: ${expat_found}" ; exit 1
+fi
 
 # ======================================================
 # Running the upstream test suite
@@ -1869,17 +1866,29 @@ CheckPython optimized
 # ======================================================
 
 %changelog
-* Thu Apr 16 2026 Charalampos Stratakis <cstratak@redhat.com> - 3.12.12-3.3
-- Security fixes for CVE-2026-4786, CVE-2026-6100
-Resolves: RHEL-167885, RHEL-168119
+* Thu Apr 16 2026 Charalampos Stratakis <cstratak@redhat.com> - 3.12.13-2
+- Security fixes for CVE-2026-1502, CVE-2026-4786, CVE-2026-6100, CVE-2026-2297, CVE-2026-3644, CVE-2026-4224
+Resolves: RHEL-167886, RHEL-168120
 
-* Fri Mar 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-3.2
+* Thu Apr 16 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.13-1
+- Update to 3.12.13
+- Security fixes for CVE-2025-6075, CVE-2025-13837, CVE-2025-15282, CVE-2025-59375, CVE-2026-0672
+- Require expat >= 2.7.2 to prevent symbol lookup errors at runtime with older expat
+Related: RHEL-167886, RHEL-168120
+
+* Fri Mar 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-6
 - Security fix for CVE-2026-4519
-Resolves: RHEL-158127
+Resolves: RHEL-158079
 
-* Fri Feb 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-3.1
+* Mon Mar 09 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-5
+- Rebuilding previous fixes for different build target
+Related: RHEL-143057, RHEL-143109, RHEL-144854
+
+* Fri Feb 27 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.12-4
 - Security fixes for CVE-2026-0865, CVE-2025-15366, CVE-2025-15367 and CVE-2026-1299
-Resolves: RHEL-143054 RHEL-143105 RHEL-144852
+Resolves: RHEL-143057
+Resolves: RHEL-143109
+Resolves: RHEL-144854
 
 * Fri Jan 16 2026 Lumír Balhar <lbalhar@redhat.com> - 3.12.12-3
 - Security fix for CVE-2025-13836
