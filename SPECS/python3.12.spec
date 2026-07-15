@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Python-2.0.1
 
 
@@ -449,6 +449,17 @@ Patch484: 00484-cve-2026-3644.patch
 #
 # Stack overflow parsing XML with deeply nested DTD content models
 Patch485: 00485-cve-2026-4224.patch
+
+# 00490 #
+# CVE-2026-15308
+#
+# gh-153030: Fix quadratic complexity in incremental parsing in HTMLParser (GH-153031) (GH-153038)
+#
+# When an unterminated construct (e.g. a tag or comment) spanned many
+# feed() calls, rescanning the growing buffer and concatenating new data
+# onto it were both quadratic.  New data is now accumulated in a list and
+# only joined and parsed once enough has piled up.
+Patch490: 00490-cve-2026-15308.patch
 
 # (New patches go here ^^^)
 #
@@ -1940,6 +1951,10 @@ fi
 # ======================================================
 
 %changelog
+* Fri Jul 10 2026 Lukáš Zachar <lzachar@redhat.com> - 3.12.13-3
+- Security fix for CVE-2026-15308
+Resolves: RHEL-193776
+
 * Thu Apr 16 2026 Charalampos Stratakis <cstratak@redhat.com> - 3.12.13-2
 - Security fixes for CVE-2026-1502, CVE-2026-4786, CVE-2026-6100, CVE-2026-2297, CVE-2026-3644, CVE-2026-4224
 Resolves: RHEL-168130, RHEL-167892
