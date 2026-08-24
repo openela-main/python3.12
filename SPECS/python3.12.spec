@@ -16,11 +16,11 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.13
+%global general_version %{pybasever}.14
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 3%{?dist}
+Release: 1%{?dist}
 License: Python-2.0.1
 
 
@@ -408,58 +408,11 @@ Patch474: 00474-cve-2025-15366.patch
 # (cherry-picked from commit b234a2b67539f787e191d2ef19a7cbdce32874e7)
 Patch475: 00475-cve-2025-15367.patch
 
-# 00478 # eb93352dc8e31f4d52546b84daad875e6ff7f29e
-# CVE-2026-4519
+# 00494 # 430aab133397ed44cc9ee621fd311e02fee317b5
+# Increase the timeout of test_large_content_length_truncated
 #
-# Reject leading dashes in webbrowser URLs (GH-146360)
-Patch478: 00478-cve-2026-4519.patch
-
-# 00479 # 97404b2cf62e545c2d41be7ccfed4e74da9ee665
-# CVE-2026-1502
-#
-# Reject CR/LF in HTTP tunnel request headers
-Patch479: 00479-cve-2026-1502.patch
-
-# 00480 # 6f4eef3ba4d9818a53698e994550ee8db17a1e2e
-# CVE-2026-4786
-#
-# Fix webbrowser `%%action` substitution bypass of dash-prefix check
-Patch480: 00480-cve-2026-4786.patch
-
-# 00482 # 69f14bc306fc62400d45565faa980b77858b9151
-# CVE-2026-6100
-#
-# Fix a possible UAF in {LZMA,BZ2,_Zlib}Decompressor
-Patch482: 00482-cve-2026-6100.patch
-
-# 00483 # 577c595137ce6ff92158ddaf2d7b7ea86437825d
-# CVE-2026-2297
-#
-# Logging Bypass in Legacy .pyc File Handling
-Patch483: 00483-cve-2026-2297.patch
-
-# 00484 # 8b5133c1ab17a060cd134bea2a4b6e1831c47fed
-# CVE-2026-3644
-#
-# Incomplete control character validation in http.cookies
-Patch484: 00484-cve-2026-3644.patch
-
-# 00485 # 12a5b206676927bcee131ab4f2bd6783d2f5914a
-# CVE-2026-4224
-#
-# Stack overflow parsing XML with deeply nested DTD content models
-Patch485: 00485-cve-2026-4224.patch
-
-# 00490 #
-# CVE-2026-15308
-#
-# gh-153030: Fix quadratic complexity in incremental parsing in HTMLParser (GH-153031) (GH-153038)
-#
-# When an unterminated construct (e.g. a tag or comment) spanned many
-# feed() calls, rescanning the growing buffer and concatenating new data
-# onto it were both quadratic.  New data is now accumulated in a list and
-# only joined and parsed once enough has piled up.
-Patch490: 00490-cve-2026-15308.patch
+# It has started to fail randomly when run on s390x architecture.
+Patch494: 00494-increase-the-timeout-of-test_large_content_length_truncated.patch
 
 # (New patches go here ^^^)
 #
@@ -1951,6 +1904,10 @@ fi
 # ======================================================
 
 %changelog
+* Thu Aug 13 2026 Karolina Surma <ksurma@redhat.com> - 3.12.14-1
+- Update to Python 3.12.14
+Resolves: RHEL-227198
+
 * Fri Jul 10 2026 Lukáš Zachar <lzachar@redhat.com> - 3.12.13-3
 - Security fix for CVE-2026-15308
 Resolves: RHEL-193776
