@@ -20,7 +20,7 @@ URL: https://www.python.org/
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Python-2.0.1
 
 
@@ -328,6 +328,9 @@ Source5: pathfix_py3_12.py
 # Originally written by bkabrda
 Source8: check-pyc-timestamps.py
 
+# A script that determines the required expat version
+Source9: expat-requires.py
+
 # Desktop menu entry for idle3
 Source10: idle3.desktop
 
@@ -573,6 +576,15 @@ Recommends: (%{pkgname}-tkinter%{?_isa} = %{version}-%{release} if tk%{?_isa})
 
 # The zoneinfo module needs tzdata
 Requires: tzdata
+
+# The requirement on libexpat is generated, but we need to version it.
+# When built with newer expat, but installed with older expat, we get:
+#   ImportError: /usr/lib64/python3.X/lib-dynload/pyexpat.cpython-....so:
+#   undefined symbol: XML_SetReparseDeferralEnabled
+# This breaks many things, including python -m venv.
+# Other subpackages (like -debug) also need this, but they all depend on -libs.
+%global expat_min_version 2.4.0
+Requires: expat%{_isa} >= %{expat_min_version}
 
 %description -n %{pkgname}-libs
 This package contains runtime libraries for use by Python:
@@ -1251,6 +1263,12 @@ for Module in %{buildroot}/%{dynload_dir}/*.so ; do
     esac
 done
 
+# Check the expat compatibility
+expat_found=$(LD_LIBRARY_PATH="%{buildroot}%{_libdir}" PYTHONPATH="%{buildroot}%{pylibdir}" %{buildroot}%{_bindir}/python%{pybasever} %{SOURCE9})
+if [ "${expat_found}" != "%{expat_min_version}" ]; then
+    echo "Found expat version is different than the declared one, found: ${expat_found}" ; exit 1
+fi
+
 
 # ======================================================
 # Running the upstream test suite
@@ -1904,6 +1922,10 @@ fi
 # ======================================================
 
 %changelog
+* Mon Sep 07 2026 Lumír Balhar <lbalhar@redhat.com> - 3.12.14-2
+- Add versioned expat requirement and check for its version
+Resolves: RHEL-251328
+
 * Thu Aug 13 2026 Karolina Surma <ksurma@redhat.com> - 3.12.14-1
 - Update to Python 3.12.14
 Resolves: RHEL-227198
