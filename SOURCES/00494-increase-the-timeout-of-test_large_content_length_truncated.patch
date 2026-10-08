@@ -9,7 +9,7 @@ It has started to fail randomly when run on s390x architecture.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Lib/test/test_httpservers.py b/Lib/test/test_httpservers.py
-index 96fc9ca574..6a3f5731a4 100644
+index 96fc9ca574..026e2bb55c 100644
 --- a/Lib/test/test_httpservers.py
 +++ b/Lib/test/test_httpservers.py
 @@ -907,7 +907,7 @@ def test_large_content_length(self):
