@@ -16,7 +16,7 @@ URL: https://www.python.org/
 
 #  WARNING  When rebasing to a new Python version,
 #           remember to update the python3-docs package as well
-%global general_version %{pybasever}.15
+%global general_version %{pybasever}.16
 #global prerel ...
 %global upstream_version %{general_version}%{?prerel}
 Version: %{general_version}%{?prerel:~%{prerel}}
@@ -416,6 +416,14 @@ Patch475: 00475-cve-2025-15367.patch
 #
 # It has started to fail randomly when run on s390x architecture.
 Patch494: 00494-increase-the-timeout-of-test_large_content_length_truncated.patch
+
+# 00499 # baa63364a364f89123f316beed8d81dda84555db
+# Fixup for CVE-2026-19553
+#
+# It now raises ValueError instead of DeprecationWarning
+#
+# Downstream only, same upstream behavior on 3.13+
+Patch499: 00499-fixup-for-cve-2026-19553.patch
 
 # (New patches go here ^^^)
 #
@@ -1922,6 +1930,17 @@ fi
 # ======================================================
 
 %changelog
+* Thu Oct 29 2026 Charalampos Stratakis <cstratak@redhat.com> - 3.12.16-2
+- Fixup for CVE-2026-19553
+Resolves: RHEL-294884
+
+* Mon Oct 26 2026 Karolina Surma <ksurma@redhat.com> - 3.12.16-1
+- Update to Python 3.12.16
+- CVE 2026-114583: tar filter allows writing outside destination via empty-named symlink
+- CVE 2026-115557: Distrust compromised intermediate certificates in ssl module
+- CVE 2026-12345: Arbitrary file deletion via race condition during temporary directory cleanup
+Related: RHEL-294884
+
 * Thu Oct 01 2026 Tomáš Hrnčiar <thrnciar@redhat.com> - 3.12.15-1
 - Update to 3.12.15
 - Security fix for CVE-2026-15310
